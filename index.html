@@ -68,6 +68,107 @@
             50% { opacity: 0.5; }
         }
 
+        /* Priority Alert */
+        .priority-alert {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(245, 158, 11, 0.2));
+            border: 2px solid rgba(239, 68, 68, 0.4);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            animation: alertPulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes alertPulse {
+            from { 
+                border-color: rgba(239, 68, 68, 0.4);
+                box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+            }
+            to { 
+                border-color: rgba(245, 158, 11, 0.6);
+                box-shadow: 0 0 30px rgba(245, 158, 11, 0.3);
+            }
+        }
+
+        .alert-icon {
+            font-size: 24px;
+            animation: bounce 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0px); }
+            to { transform: translateY(-4px); }
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ef4444;
+            margin-bottom: 4px;
+        }
+
+        .alert-description {
+            font-size: 13px;
+            color: #a1a1aa;
+            line-height: 1.4;
+        }
+
+        .alert-countdown {
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .countdown-label {
+            font-size: 11px;
+            color: #a1a1aa;
+            margin-bottom: 4px;
+        }
+
+        .countdown-timer {
+            font-size: 18px;
+            font-weight: 700;
+            color: #f59e0b;
+        }
+
+        /* Critical Badge */
+        .critical-badge {
+            background: linear-gradient(135deg, #ef4444, #f59e0b);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-left: 8px;
+            animation: badgePulse 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes badgePulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
+        }
+
+        /* Bug Trend */
+        .bug-trend {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .trend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+            font-size: 12px;
+            color: #a1a1aa;
+        }
+
         /* Glass Card Base */
         .glass-card {
             background: rgba(255, 255, 255, 0.05);
@@ -156,6 +257,30 @@
         .person-title {
             font-size: 12px;
             color: #a1a1aa;
+        }
+
+        .person-salary {
+            font-size: 11px;
+            color: #22c55e;
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        .critical-hire {
+            animation: criticalPulse 1.5s ease-in-out infinite alternate;
+            border: 3px solid transparent;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(245, 158, 11, 0.3));
+        }
+
+        @keyframes criticalPulse {
+            from { 
+                box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+                border-color: rgba(239, 68, 68, 0.6);
+            }
+            to { 
+                box-shadow: 0 0 30px rgba(245, 158, 11, 0.6);
+                border-color: rgba(245, 158, 11, 0.8);
+            }
         }
 
         /* Linear Tickets */
@@ -320,7 +445,7 @@
         }
 
         .phase {
-            min-width: 120px;
+            min-width: 160px;
             padding: 16px;
             border-radius: 12px;
             text-align: center;
@@ -332,6 +457,7 @@
         .phase-3 { background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.3); }
         .phase-4 { background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.3); }
         .phase-5 { background: rgba(147, 51, 234, 0.2); border: 1px solid rgba(147, 51, 234, 0.3); }
+        .phase-6 { background: rgba(236, 72, 153, 0.2); border: 1px solid rgba(236, 72, 153, 0.3); }
 
         .phase.current::after {
             content: '';
@@ -347,14 +473,28 @@
         }
 
         .phase-weeks {
-            font-size: 12px;
+            font-size: 11px;
             color: #a1a1aa;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
+            font-weight: 600;
+        }
+
+        .phase-dates {
+            font-size: 10px;
+            color: #71717a;
+            margin-bottom: 6px;
         }
 
         .phase-title {
             font-weight: 600;
             font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .phase-items {
+            font-size: 10px;
+            color: #a1a1aa;
+            line-height: 1.3;
         }
 
         /* Burn Rate */
@@ -387,6 +527,38 @@
         .rate-arrow {
             font-size: 24px;
             color: #f59e0b;
+        }
+
+        .burn-breakdown {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 12px;
+            color: #a1a1aa;
+        }
+
+        .breakdown-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 13px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .breakdown-value {
+            color: #f59e0b;
+            font-weight: 500;
         }
 
         /* Slack Activity */
@@ -479,71 +651,92 @@
             </div>
         </div>
 
+        <!-- Priority Alert -->
+        <div class="priority-alert">
+            <div class="alert-icon">🚨</div>
+            <div class="alert-content">
+                <div class="alert-title">PRIORITY #1: Abdullah Deploy Authority</div>
+                <div class="alert-description">Announce Thursday March 27 at Rimo call. 17 tickets stuck. Give: GitHub merge rights, CI/CD deploy keys, prod SSH, DB access, rollback capability.</div>
+            </div>
+            <div class="alert-countdown">
+                <div class="countdown-label">Announcement in:</div>
+                <div id="countdown-timer" class="countdown-timer">--</div>
+            </div>
+        </div>
+
         <!-- Dashboard Grid -->
         <div class="dashboard-grid">
             <!-- Org Chart Card -->
             <div class="glass-card">
-                <h2 class="card-title">Team & Open Roles</h2>
+                <h2 class="card-title">Team & Open Roles <span class="critical-badge">6 CRITICAL HIRES</span></h2>
                 <div class="org-chart">
                     <div class="person">
                         <div class="avatar">S</div>
                         <div class="person-name">Saamir</div>
-                        <div class="person-title">Co-Founder</div>
+                        <div class="person-title">Co-Founder, Strategy</div>
                     </div>
                     <div class="person">
                         <div class="avatar">C</div>
                         <div class="person-name">Cameron</div>
-                        <div class="person-title">Co-Founder/Product</div>
+                        <div class="person-title">Co-Founder, Product</div>
+                        <div class="person-salary">$15K/mo</div>
                     </div>
                     <div class="person">
                         <div class="avatar">J</div>
                         <div class="person-name">Jaden</div>
                         <div class="person-title">COO</div>
+                        <div class="person-salary">$10K/mo</div>
                     </div>
                     <div class="person">
                         <div class="avatar">A</div>
                         <div class="person-name">Abdullah</div>
-                        <div class="person-title">VPE</div>
+                        <div class="person-title">VP Engineering</div>
+                        <div class="person-salary">$8K→$16K/mo</div>
                     </div>
                     <div class="person">
                         <div class="avatar">O</div>
                         <div class="person-name">Omar</div>
-                        <div class="person-title">Dev</div>
+                        <div class="person-title">Dev, Amsterdam</div>
+                        <div class="person-salary">$3K/mo</div>
                     </div>
                     <div class="person">
                         <div class="avatar">Os</div>
                         <div class="person-name">Osman</div>
-                        <div class="person-title">Dev</div>
+                        <div class="person-title">Dev, Belgrade</div>
+                        <div class="person-salary">$2K/mo</div>
                     </div>
                     <div class="person">
-                        <div class="avatar open-role">LD</div>
-                        <div class="person-name">Lead Dev</div>
-                        <div class="person-title">Open Role</div>
-                    </div>
-                    <div class="person">
-                        <div class="avatar open-role">D1</div>
-                        <div class="person-name">Dev M1</div>
-                        <div class="person-title">Open Role</div>
-                    </div>
-                    <div class="person">
-                        <div class="avatar open-role">D2</div>
-                        <div class="person-name">Dev M2</div>
-                        <div class="person-title">Open Role</div>
-                    </div>
-                    <div class="person">
-                        <div class="avatar open-role">SM</div>
-                        <div class="person-name">Sales Manager</div>
-                        <div class="person-title">Open Role</div>
-                    </div>
-                    <div class="person">
-                        <div class="avatar open-role">AM</div>
+                        <div class="avatar open-role critical-hire">AM</div>
                         <div class="person-name">Account Manager</div>
-                        <div class="person-title">Open Role</div>
+                        <div class="person-title">OPEN - Reports to Jaden</div>
+                        <div class="person-salary">$4K/mo</div>
                     </div>
                     <div class="person">
-                        <div class="avatar open-role">PO</div>
+                        <div class="avatar open-role critical-hire">PO</div>
                         <div class="person-name">Product Owner</div>
-                        <div class="person-title">Open Role</div>
+                        <div class="person-title">OPEN - New Hire</div>
+                    </div>
+                    <div class="person">
+                        <div class="avatar open-role critical-hire">LD</div>
+                        <div class="person-name">Lead Dev</div>
+                        <div class="person-title">OPEN - Rimo OS Team A</div>
+                    </div>
+                    <div class="person">
+                        <div class="avatar open-role critical-hire">D1</div>
+                        <div class="person-name">Dev M1</div>
+                        <div class="person-title">OPEN - Rimo OS</div>
+                        <div class="person-salary">$4K/mo</div>
+                    </div>
+                    <div class="person">
+                        <div class="avatar open-role critical-hire">D2</div>
+                        <div class="person-name">Dev M2</div>
+                        <div class="person-title">OPEN - Rimo OS</div>
+                        <div class="person-salary">$4K/mo</div>
+                    </div>
+                    <div class="person">
+                        <div class="avatar open-role critical-hire">SM</div>
+                        <div class="person-name">Sales Manager</div>
+                        <div class="person-title">OPEN - Poach from competitor</div>
                     </div>
                 </div>
             </div>
@@ -649,11 +842,25 @@
             <div class="glass-card">
                 <h2 class="card-title">Cameron Bug Frequency</h2>
                 <div class="metric">
-                    <div class="metric-value">7</div>
+                    <div class="metric-value" style="color: #ef4444;">12</div>
                     <div class="metric-label">@mentions in support channels today</div>
                 </div>
-                <div style="margin-top: 16px; padding: 8px; background: rgba(147, 51, 234, 0.1); border-radius: 8px; font-size: 12px; color: #9333ea;">
-                    📱 Slack API integration coming soon
+                <div class="bug-trend">
+                    <div class="trend-item">
+                        <span>Yesterday:</span>
+                        <span style="color: #f59e0b;">8 mentions</span>
+                    </div>
+                    <div class="trend-item">
+                        <span>This week avg:</span>
+                        <span style="color: #ef4444;">9.5 mentions</span>
+                    </div>
+                    <div class="trend-item">
+                        <span>Goal:</span>
+                        <span style="color: #22c55e;">&lt; 5 mentions/day</span>
+                    </div>
+                </div>
+                <div style="margin-top: 12px; padding: 8px; background: rgba(239, 68, 68, 0.1); border-radius: 8px; font-size: 11px; color: #ef4444;">
+                    🔥 Above target - platform stability focus needed
                 </div>
             </div>
 
@@ -663,40 +870,74 @@
                 <div class="burn-rate">
                     <div class="rate-item">
                         <div class="rate-amount rate-current">$38K</div>
-                        <div class="rate-label">Current</div>
+                        <div class="rate-label">Current (5 people)</div>
                     </div>
                     <div class="rate-arrow">→</div>
                     <div class="rate-item">
                         <div class="rate-amount rate-projected">$54K</div>
-                        <div class="rate-label">Projected</div>
+                        <div class="rate-label">Projected (8 people)</div>
+                    </div>
+                </div>
+                <div class="burn-breakdown">
+                    <div class="breakdown-item">
+                        <span>Abdullah raise:</span>
+                        <span class="breakdown-value">+$8K</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Account Manager:</span>
+                        <span class="breakdown-value">+$4K</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>2 Rimo OS devs:</span>
+                        <span class="breakdown-value">+$8K</span>
+                    </div>
+                    <div class="breakdown-total">
+                        <span>Growth:</span>
+                        <span class="breakdown-value">+42%</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Roadmap Timeline -->
+        <!-- Operations Timeline -->
         <div class="glass-card wide-card">
-            <h2 class="card-title">8-Week Roadmap</h2>
+            <h2 class="card-title">Operations Timeline</h2>
             <div class="timeline">
                 <div class="phase phase-1 current">
-                    <div class="phase-weeks">Week 1-2</div>
-                    <div class="phase-title">Stabilize</div>
+                    <div class="phase-weeks">THIS WEEK</div>
+                    <div class="phase-dates">Mar 24-30</div>
+                    <div class="phase-title">Foundation</div>
+                    <div class="phase-items">LegitScript, Abdullah deploy authority Thu, insurance</div>
                 </div>
                 <div class="phase phase-2">
-                    <div class="phase-weeks">Week 3-4</div>
+                    <div class="phase-weeks">WEEK 2</div>
+                    <div class="phase-dates">Mar 31-Apr 6</div>
                     <div class="phase-title">Hiring</div>
+                    <div class="phase-items">Sales manager search, AM posting, Google Ads</div>
                 </div>
                 <div class="phase phase-3">
-                    <div class="phase-weeks">Week 5-6</div>
-                    <div class="phase-title">Systems</div>
+                    <div class="phase-weeks">WEEK 3-4</div>
+                    <div class="phase-dates">Apr 7-20</div>
+                    <div class="phase-title">Automation</div>
+                    <div class="phase-items">Everflow, DocuSign, Notion onboarding</div>
                 </div>
                 <div class="phase phase-4">
-                    <div class="phase-weeks">Week 7-8</div>
-                    <div class="phase-title">Operations</div>
+                    <div class="phase-weeks">WEEK 5-6</div>
+                    <div class="phase-dates">Apr 21-May 4</div>
+                    <div class="phase-title">Partnerships</div>
+                    <div class="phase-items">Client contracts, payment partners, marketplace</div>
                 </div>
                 <div class="phase phase-5">
-                    <div class="phase-weeks">Week 9+</div>
+                    <div class="phase-weeks">WEEK 7-8</div>
+                    <div class="phase-dates">May 5-18</div>
+                    <div class="phase-title">Operations</div>
+                    <div class="phase-items">CSM hire, financial controller, training docs</div>
+                </div>
+                <div class="phase phase-6">
+                    <div class="phase-weeks">WEEK 9+</div>
+                    <div class="phase-dates">May 19+</div>
                     <div class="phase-title">Rimo OS</div>
+                    <div class="phase-items">Cameron + 2 devs build $197/mo platform</div>
                 </div>
             </div>
         </div>
@@ -711,11 +952,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             updateTimestamp();
             loadLinearData();
+            updateCountdown();
             
             // Auto-refresh every 60 seconds
             setInterval(() => {
                 loadLinearData();
                 updateTimestamp();
+                updateCountdown();
             }, 60000);
         });
 
@@ -729,6 +972,33 @@
             });
             document.getElementById('last-updated').textContent = `Last updated: ${timeString}`;
             lastUpdated = now;
+        }
+
+        // Update countdown to Abdullah announcement
+        function updateCountdown() {
+            const now = new Date();
+            const targetDate = new Date('2026-03-27T15:00:00'); // Thursday March 27, 3 PM (assuming Rimo call time)
+            const timeDiff = targetDate - now;
+
+            const countdownElement = document.getElementById('countdown-timer');
+            
+            if (timeDiff <= 0) {
+                countdownElement.textContent = 'NOW!';
+                countdownElement.style.color = '#22c55e';
+                return;
+            }
+
+            const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+
+            if (days > 0) {
+                countdownElement.textContent = `${days}d ${hours}h`;
+            } else if (hours > 0) {
+                countdownElement.textContent = `${hours}h ${minutes}m`;
+            } else {
+                countdownElement.textContent = `${minutes}m`;
+            }
         }
 
         // Tab switching
