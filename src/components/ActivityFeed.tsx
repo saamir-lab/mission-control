@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import type { ActivityItem } from "@/types/dashboard";
+import type { ActivityItem } from "@/src/types/dashboard";
 
 type ActivityFeedProps = {
   activity: ActivityItem[];
@@ -25,6 +25,16 @@ const typeMap: Record<
     label: "Blocker",
     className: "feed-item feed-critical",
     dotClass: "pulse-dot dot-critical",
+  },
+  slack_message: {
+    label: "Slack",
+    className: "feed-item feed-purple",
+    dotClass: "pulse-dot dot-purple",
+  },
+  email: {
+    label: "Email",
+    className: "feed-item feed-blue",
+    dotClass: "pulse-dot dot-blue",
   },
 };
 

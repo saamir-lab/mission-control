@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import type { DashboardData, TeamMember } from "@/types/dashboard";
+import type { DashboardData, TeamMember } from "@/src/types/dashboard";
 import { AnimatedCounter } from "./AnimatedCounter";
 
 type TeamGridProps = {
@@ -14,7 +14,8 @@ type TeamGridProps = {
 const statusTone: Record<TeamMember["status"], string> = {
   active: "status-success",
   busy: "status-warning",
-  review: "status-critical",
+  blocked: "status-critical",
+  offline: "status-muted",
 };
 
 function MemberCard({

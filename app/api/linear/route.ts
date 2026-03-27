@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { queryLinearRaw } from "@/lib/linear";
+import { queryLinearRaw } from "@/src/lib/linear";
 
 type LinearBody = {
   query?: string;

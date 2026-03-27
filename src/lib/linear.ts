@@ -4,7 +4,13 @@ import type {
   HiringSlot,
   ProjectMetric,
   TeamMember,
-} from "@/types/dashboard";
+  TasksByPerson,
+  TaskItem,
+  OrgChartNode,
+  PersonDetailData,
+} from "@/src/types/dashboard";
+import { getSlackActivity } from "./slack";
+import { getGmailSummary } from "./gmail";
 
 const LINEAR_GRAPHQL_URL = "https://api.linear.app/graphql";
 
@@ -268,7 +274,7 @@ function buildTeam(issues: LinearIssue[]): TeamMember[] {
 
     const utilization = clamp(Math.round((activeWork / 4) * 100), 18, 100);
     const status: TeamMember["status"] =
-      activeWork >= 5 ? "busy" : activeWork >= 2 ? "active" : "review";
+      activeWork >= 5 ? "busy" : activeWork >= 2 ? "active" : "offline";
 
     return {
       id: person.id,
@@ -350,6 +356,7 @@ function buildActivity(issues: LinearIssue[]): ActivityItem[] {
         actor: sanitizeText(issue.assignee?.name || issue.team?.name || "Team"),
         summary: `${sanitizeText(issue.title)} completed`,
         relativeTime: relativeTime(issue.updatedAt),
+        source: "linear",
       }),
     );
 
@@ -364,6 +371,7 @@ function buildActivity(issues: LinearIssue[]): ActivityItem[] {
         actor: sanitizeText(issue.assignee?.name || issue.team?.name || "Ops"),
         summary: `${sanitizeText(issue.title)} opened`,
         relativeTime: relativeTime(issue.createdAt),
+        source: "linear",
       }),
     );
 
@@ -378,94 +386,154 @@ function buildActivity(issues: LinearIssue[]): ActivityItem[] {
         actor: sanitizeText(issue.assignee?.name || "Ops"),
         summary: `${sanitizeText(issue.title)} blocked`,
         relativeTime: relativeTime(issue.updatedAt),
+        source: "linear",
       }),
     );
 
   return [...blockers, ...newIssues, ...completions].slice(0, 10);
 }
 
-function fallbackData(): DashboardData {
-  const team = TEAM_BLUEPRINT.map<TeamMember>((member, index) => ({
-    id: member.id,
-    name: member.name,
-    role: member.role,
-    compensation: member.compensation,
-    status: index % 2 === 0 ? "active" : "busy",
-    activeWork: index < 4 ? 3 + (index % 2) : 2,
-    utilization: index < 4 ? 82 : 64,
-    strategicPriorities: member.strategicPriorities,
-    focusSummary: member.focusSummary,
-    isCofounder: member.isCofounder,
-  }));
+// Removed fallback data - V5 shows real data or error state
 
-  return {
-    generatedAt: new Date().toISOString(),
-    health: {
-      velocity: 76,
-      blockers: 65,
-      utilization: 81,
-      overdue: 72,
-      composite: 74,
-    },
-    healthStatusLine: "Team is productive. 2 milestones behind. 3 blockers need attention.",
-    team,
-    hiring: HIRING_SLOTS,
-    projects: [
-      {
-        id: "fallback-1",
-        title: "Fixing Rimo Stability Sprint",
-        owner: "Abdullah",
-        completion: 59,
-        health: "warning",
-        blockers: 2,
-      },
-      {
-        id: "fallback-2",
-        title: "Jarvis Clinical Workflow",
-        owner: "Cameron Mema",
-        completion: 71,
-        health: "warning",
-        blockers: 1,
-      },
-      {
-        id: "fallback-3",
-        title: "Customer Onboarding Automation",
-        owner: "Jaden",
-        completion: 83,
-        health: "success",
-        blockers: 0,
-      },
-    ],
-    activity: [
-      {
-        id: "fallback-complete",
-        type: "completion",
-        actor: "Omar Adel",
-        summary: "Referral intake workflow completed",
-        relativeTime: "24m ago",
-      },
-      {
-        id: "fallback-new",
-        type: "new_issue",
-        actor: "Cameron Mema",
-        summary: "Pricing page updates opened",
-        relativeTime: "39m ago",
-      },
-      {
-        id: "fallback-blocker",
-        type: "blocker",
-        actor: "Abdullah",
-        summary: "Production auth callback blocked",
-        relativeTime: "1h ago",
-      },
-    ],
-  };
+function buildTasksByPerson(issues: LinearIssue[]): TasksByPerson[] {
+  const taskMap = new Map<string, TaskItem[]>();
+
+  // Group active tasks by assignee
+  issues
+    .filter((issue) => issue.state.type !== "completed" && issue.state.type !== "canceled")
+    .forEach((issue) => {
+      const assigneeName = sanitizeText(issue.assignee?.name || "Unassigned");
+      if (assigneeName === "Unassigned") return;
+
+      const task: TaskItem = {
+        id: issue.id,
+        title: sanitizeText(issue.title),
+        status: issue.state.name,
+        project: sanitizeText(issue.project?.name || issue.team?.name || "Core"),
+        priority: Math.max(1, Math.min(4, issue.priority)) as 1 | 2 | 3 | 4,
+        relativeTime: relativeTime(issue.updatedAt),
+      };
+
+      if (!taskMap.has(assigneeName)) {
+        taskMap.set(assigneeName, []);
+      }
+      taskMap.get(assigneeName)!.push(task);
+    });
+
+  return Array.from(taskMap.entries()).map(([personName, tasks]) => {
+    // Find person ID from team blueprint
+    const person = TEAM_BLUEPRINT.find((p) =>
+      p.aliases.some((alias) => personName.toLowerCase().includes(alias))
+    );
+
+    // Sort tasks by priority
+    const sortedTasks = tasks.sort((a, b) => a.priority - b.priority);
+
+    return {
+      personId: person?.id || personName.toLowerCase().replace(/\s+/g, "-"),
+      personName,
+      tasks: sortedTasks,
+      taskCount: tasks.length,
+      topTask: sortedTasks[0]?.title,
+    };
+  });
 }
 
-function buildDashboardData(issues: LinearIssue[]): DashboardData {
+function buildOrgChart(team: TeamMember[]): OrgChartNode[] {
+  const nodes: OrgChartNode[] = [];
+
+  // Add team members
+  team.forEach((member) => {
+    let level = 3; // Default to team level
+    if (member.role === "Founder") level = 1;
+    else if (member.role === "Co-Founder" || member.role === "COO") level = 2;
+
+    nodes.push({
+      id: member.id,
+      name: member.name,
+      role: member.role,
+      level,
+      status: member.status,
+      utilization: member.utilization,
+      activeTaskCount: member.activeWork,
+      currentTask: member.focusSummary,
+    });
+  });
+
+  // Add hiring slots
+  HIRING_SLOTS.forEach((slot) => {
+    nodes.push({
+      id: slot.id,
+      name: slot.title,
+      role: "Open Position",
+      level: 4,
+      status: "hiring",
+      isHiring: true,
+    });
+  });
+
+  return nodes;
+}
+
+async function buildMergedActivity(issues: LinearIssue[]): Promise<ActivityItem[]> {
+  const linearActivity = buildActivity(issues);
+  const mergedActivity: ActivityItem[] = [...linearActivity];
+
+  try {
+    // Add Slack activity
+    const { recentMessages, clientAlerts } = await getSlackActivity();
+    
+    // Add recent Slack messages
+    recentMessages.slice(0, 8).forEach((message) => {
+      mergedActivity.push({
+        id: `slack-${message.id}`,
+        type: "slack_message",
+        actor: message.userName,
+        summary: `${message.text} in #${message.channelName}`,
+        relativeTime: message.relativeTime,
+        source: "slack",
+        priority: message.isUrgent ? "high" : "medium",
+      });
+    });
+
+    // Add Gmail activity
+    const { topEmails } = await getGmailSummary();
+    topEmails.slice(0, 3).forEach((email) => {
+      mergedActivity.push({
+        id: `email-${email.id}`,
+        type: "email",
+        actor: email.sender,
+        summary: email.subject,
+        relativeTime: email.relativeTime,
+        source: "email",
+        priority: email.priority,
+      });
+    });
+  } catch (error) {
+    console.warn("Failed to fetch external activity:", error);
+  }
+
+  // Sort by priority and time
+  return mergedActivity
+    .sort((a, b) => {
+      const priorityOrder = { high: 3, medium: 2, low: 1 };
+      const aPriority = priorityOrder[a.priority || "low"];
+      const bPriority = priorityOrder[b.priority || "low"];
+      
+      if (aPriority !== bPriority) return bPriority - aPriority;
+      
+      // If same priority, sort by time (newer first)
+      return b.relativeTime.localeCompare(a.relativeTime);
+    })
+    .slice(0, 15); // Limit to 15 items
+}
+
+async function buildDashboardData(issues: LinearIssue[]): Promise<DashboardData> {
   const team = buildTeam(issues);
   const projects = buildProjects(issues);
-  const activity = buildActivity(issues);
+  const tasks = buildTasksByPerson(issues);
+  const orgChart = buildOrgChart(team);
+  const activity = await buildMergedActivity(issues);
 
   const activeIssues = issues.filter(
     (issue) => issue.state.type !== "completed" && issue.state.type !== "canceled",
@@ -501,6 +569,19 @@ function buildDashboardData(issues: LinearIssue[]): DashboardData {
   );
   const blockersNeedAttention = Math.max(1, blockerCount);
 
+  // Get external data
+  let emailData: { unreadCount: number; topEmails: any[] } = { unreadCount: 0, topEmails: [] };
+  let slackData: { recentMessages: any[]; clientAlerts: any[] } = { recentMessages: [], clientAlerts: [] };
+
+  try {
+    [emailData, slackData] = await Promise.all([
+      getGmailSummary(),
+      getSlackActivity(),
+    ]);
+  } catch (error) {
+    console.warn("Failed to fetch external data:", error);
+  }
+
   return {
     generatedAt: new Date().toISOString(),
     health: {
@@ -515,6 +596,10 @@ function buildDashboardData(issues: LinearIssue[]): DashboardData {
     hiring: HIRING_SLOTS,
     projects,
     activity,
+    tasks,
+    email: emailData,
+    slack: slackData,
+    orgChart,
   };
 }
 
@@ -522,10 +607,94 @@ export async function getDashboardData(): Promise<DashboardData> {
   try {
     const issues = await getLinearIssues();
     if (!issues.length) {
-      return fallbackData();
+      throw new Error("No Linear issues found. Check your LINEAR_API_KEY and team configuration.");
     }
-    return buildDashboardData(issues);
-  } catch {
-    return fallbackData();
+    return await buildDashboardData(issues);
+  } catch (error) {
+    console.error("Failed to get dashboard data:", error);
+    throw error;
+  }
+}
+
+// New function to get person detail data
+export async function getPersonDetailData(personId: string): Promise<PersonDetailData | null> {
+  try {
+    const issues = await getLinearIssues();
+    const person = TEAM_BLUEPRINT.find((p) => p.id === personId);
+    if (!person) return null;
+
+    const personIssues = issues.filter((issue) => {
+      if (issue.state.type === "completed" || issue.state.type === "canceled") {
+        return false;
+      }
+      const assignee = assigneeKey(issue.assignee?.name);
+      return assignee.length > 0 && person.aliases.some((alias) => assignee.includes(alias));
+    });
+
+    const completedThisWeek = issues.filter((issue) => {
+      if (issue.state.type !== "completed") return false;
+      const assignee = assigneeKey(issue.assignee?.name);
+      const isAssigned = assignee.length > 0 && person.aliases.some((alias) => assignee.includes(alias));
+      const isThisWeek = Date.now() - +new Date(issue.updatedAt) < 7 * 24 * 60 * 60 * 1000;
+      return isAssigned && isThisWeek;
+    }).length;
+
+    const activeTasks: TaskItem[] = personIssues.map((issue) => ({
+      id: issue.id,
+      title: sanitizeText(issue.title),
+      status: issue.state.name,
+      project: sanitizeText(issue.project?.name || issue.team?.name || "Core"),
+      priority: Math.max(1, Math.min(4, issue.priority)) as 1 | 2 | 3 | 4,
+      relativeTime: relativeTime(issue.updatedAt),
+    }));
+
+    const blockers = personIssues
+      .filter(isBlocker)
+      .map((issue) => sanitizeText(issue.title));
+
+    const utilization = clamp(Math.round((personIssues.length / 4) * 100), 18, 100);
+    const status: PersonDetailData["status"] =
+      personIssues.length >= 5 ? "busy" : personIssues.length >= 2 ? "active" : "offline";
+
+    // Get Slack activity for this person
+    let recentSlackActivity: any[] = [];
+    try {
+      const { recentMessages } = await getSlackActivity();
+      recentSlackActivity = recentMessages.filter((msg) =>
+        person.aliases.some((alias) => msg.userName.toLowerCase().includes(alias))
+      );
+    } catch (error) {
+      console.warn("Failed to get Slack activity for person:", error);
+    }
+
+    // Mock time allocation (in a real implementation, this would come from time tracking)
+    const timeAllocation: { [project: string]: number } = {};
+    const projectCounts = new Map<string, number>();
+    activeTasks.forEach((task) => {
+      projectCounts.set(task.project, (projectCounts.get(task.project) || 0) + 1);
+    });
+    const totalTasks = activeTasks.length;
+    if (totalTasks > 0) {
+      projectCounts.forEach((count, project) => {
+        timeAllocation[project] = Math.round((count / totalTasks) * 100);
+      });
+    }
+
+    return {
+      id: person.id,
+      name: person.name,
+      role: person.role,
+      compensation: person.compensation,
+      status,
+      utilization,
+      activeTasks: activeTasks.sort((a, b) => a.priority - b.priority),
+      completedThisWeek,
+      blockers,
+      recentSlackActivity,
+      timeAllocation,
+    };
+  } catch (error) {
+    console.error("Failed to get person detail data:", error);
+    return null;
   }
 }

@@ -1,172 +1,175 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { TopBar } from "@/src/components/TopBar";
+import { OrgChart } from "@/src/components/OrgChart";
+import { PersonDetail } from "@/src/components/PersonDetail";
+import { ProjectsSidebar } from "@/src/components/ProjectsSidebar";
+import { ActivityStream } from "@/src/components/ActivityStream";
+import { TasksBoard } from "@/src/components/TasksBoard";
+import type { DashboardData, PersonDetailData } from "@/src/types/dashboard";
 
-import type { DashboardData, TeamMember } from "@/types/dashboard";
-import { HealthRing } from "@/components/HealthRing";
-import { ProjectsSidebar } from "@/components/ProjectsSidebar";
-import { TeamGrid } from "@/components/TeamGrid";
-import { ActivityFeed } from "@/components/ActivityFeed";
-import { MemberDetailPanel } from "@/components/MemberDetailPanel";
-import { AnimatedCounter } from "@/components/AnimatedCounter";
-
-const REFRESH_INTERVAL_MS = 60_000;
-
-export default function HomePage() {
+export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
-  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [selectedPerson, setSelectedPerson] = useState<PersonDetailData | null>(null);
+  const [isPersonDetailOpen, setIsPersonDetailOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadDashboard = async () => {
+  const fetchDashboardData = async () => {
     try {
       setError(null);
-      const res = await fetch("/api/dashboard", { cache: "no-store" });
-      if (!res.ok) {
-        throw new Error(`Dashboard fetch failed: ${res.status}`);
+      const response = await fetch("/api/dashboard", {
+        cache: "no-store",
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || errorData.error || "Failed to fetch dashboard data");
       }
-      const json = (await res.json()) as DashboardData;
-      setData(json);
+      
+      const dashboardData = await response.json();
+      setData(dashboardData);
     } catch (err) {
-      console.error(err);
-      setError("Unable to load live mission data right now.");
+      console.error("Failed to fetch dashboard data:", err);
+      setError(err instanceof Error ? err.message : "Unknown error occurred");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
+  const fetchPersonDetail = async (personId: string) => {
+    try {
+      const response = await fetch(`/api/dashboard?personId=${personId}`);
+      if (response.ok) {
+        const personData = await response.json();
+        setSelectedPerson(personData);
+        setIsPersonDetailOpen(true);
+      }
+    } catch (err) {
+      console.error("Failed to fetch person detail:", err);
+    }
+  };
+
+  const handlePersonClick = (personId: string) => {
+    fetchPersonDetail(personId);
+  };
+
+  const handleClosePersonDetail = () => {
+    setIsPersonDetailOpen(false);
+    setSelectedPerson(null);
+  };
+
+  const handleProjectClick = (projectId: string) => {
+    // Highlight team members working on this project
+    console.log("Project clicked:", projectId);
+    // TODO: Implement project highlighting in org chart
+  };
+
+  // Auto-refresh every 60 seconds
   useEffect(() => {
-    void loadDashboard();
-    const timer = window.setInterval(() => {
-      void loadDashboard();
-    }, REFRESH_INTERVAL_MS);
-    return () => window.clearInterval(timer);
+    fetchDashboardData();
+    const interval = setInterval(fetchDashboardData, 60000);
+    return () => clearInterval(interval);
   }, []);
 
-  const generatedLabel = useMemo(() => {
-    if (!data) return "Loading live feed...";
-    return new Date(data.generatedAt).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }, [data]);
+  if (loading) {
+    return (
+      <div className="h-screen bg-bg-deep flex items-center justify-center">
+        <motion.div
+          className="text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <div className="w-16 h-16 border-4 border-accent/30 border-t-accent rounded-full animate-spin mx-auto mb-4" />
+          <div className="text-text-primary text-xl font-semibold">Loading Mission Control...</div>
+          <div className="text-text-secondary text-sm mt-2">Aggregating data from Linear, Slack, and Gmail</div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-screen bg-bg-deep flex items-center justify-center">
+        <motion.div
+          className="text-center max-w-md mx-auto p-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="text-6xl mb-4">⚠️</div>
+          <div className="text-text-primary text-xl font-semibold mb-2">
+            Mission Control Offline
+          </div>
+          <div className="text-text-secondary text-sm mb-6">
+            {error}
+          </div>
+          <div className="text-text-muted text-xs mb-4">
+            Check your environment variables in .env.local:
+            <br />• LINEAR_API_KEY
+            <br />• SLACK_TOKEN_RIMO (optional)
+            <br />• GOG_KEYRING_PASSWORD (optional)
+          </div>
+          <button
+            onClick={fetchDashboardData}
+            className="px-6 py-2 bg-accent hover:bg-accent/80 text-white rounded-lg transition-colors"
+          >
+            Retry Connection
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return null;
+  }
 
   return (
-    <main className="dashboard-shell">
-      <motion.div
-        className="background-glow glow-a"
-        animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.08, 1] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        className="background-glow glow-b"
-        animate={{ opacity: [0.35, 0.6, 0.35], scale: [1, 1.06, 1] }}
-        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+    <div className="h-screen bg-bg-deep overflow-hidden flex flex-col">
+      {/* Top Bar */}
+      <TopBar
+        health={data.health}
+        statusLine={data.healthStatusLine}
+        lastUpdated={data.generatedAt}
       />
 
-      <header className="health-bar glass-panel">
-        <div>
-          <h1 className="dashboard-title">Mission Control V4</h1>
-          <p className="dashboard-subtitle">
-            Bloomberg Terminal precision, NASA mission clarity
-          </p>
-        </div>
-        <div className="health-main">
-          <HealthRing score={data?.health.composite ?? 0} />
-          <div className="health-meta">
-            <div className="health-score">
-              <AnimatedCounter value={data?.health.composite ?? 0} /> / 100
-            </div>
-            <p className="status-line">
-              {data?.healthStatusLine ??
-                "Team is productive. 2 milestones behind. 3 blockers need attention."}
-            </p>
-            <p className="updated-label">Updated at {generatedLabel}</p>
-            <div className="health-breakdown">
-              <span>
-                Velocity <strong>{data?.health.velocity ?? 0}</strong>
-              </span>
-              <span>
-                Blockers <strong>{data?.health.blockers ?? 0}</strong>
-              </span>
-              <span>
-                Utilization <strong>{data?.health.utilization ?? 0}</strong>
-              </span>
-              <span>
-                Overdue <strong>{data?.health.overdue ?? 0}</strong>
-              </span>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Main Content Grid */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Sidebar - Projects */}
+        <ProjectsSidebar
+          projects={data.projects}
+          onProjectClick={handleProjectClick}
+        />
 
-      <section className="dashboard-grid">
-        <aside className="grid-left glass-panel">
-          <div className="sidebar-title-wrap">
-            <h2>Projects</h2>
-            <span className="live-pill">
-              <span className="pulse-dot" /> live
-            </span>
-          </div>
-          {data ? (
-            <ProjectsSidebar projects={data.projects} />
-          ) : (
-            <div className="loading-card">{error ?? "Loading projects..."}</div>
-          )}
-        </aside>
-
-        <section className="grid-center glass-panel">
-          <div className="center-head">
-            <h2>Team Grid</h2>
-            <div className="team-counters">
-              <div className="counter-pill">
-                Active{" "}
-                <strong>
-                  <AnimatedCounter
-                    value={data?.team.filter((m) => m.status === "active").length ?? 0}
-                  />
-                </strong>
-              </div>
-              <div className="counter-pill">
-                Blockers{" "}
-                <strong>
-                  <AnimatedCounter value={Math.max(0, 100 - (data?.health.blockers ?? 0))} />
-                </strong>
-              </div>
-            </div>
-          </div>
-
-          {isLoading && <div className="loading-card">Syncing with Linear...</div>}
-          {error && !data && <div className="loading-card critical">{error}</div>}
-          {data && (
-            <TeamGrid
-              members={data.team}
-              hiring={data.hiring}
-              selectedMemberId={selectedMember?.id ?? null}
-              onSelect={(member) => setSelectedMember(member)}
+        {/* Center - Org Chart */}
+        <div className="flex-1 flex flex-col">
+          <div className="flex-1 bg-card backdrop-blur-xl">
+            <OrgChart
+              nodes={data.orgChart}
+              onPersonClick={handlePersonClick}
             />
-          )}
-        </section>
+          </div>
 
-        <aside className="grid-right glass-panel">
-          <h2>Activity Feed</h2>
-          {data ? (
-            <ActivityFeed activity={data.activity} />
-          ) : (
-            <div className="loading-card">Loading feed...</div>
-          )}
-        </aside>
-      </section>
+          {/* Bottom - Tasks Board */}
+          <div className="h-80">
+            <TasksBoard tasksByPerson={data.tasks} />
+          </div>
+        </div>
 
-      <AnimatePresence>
-        {selectedMember && (
-          <MemberDetailPanel
-            member={selectedMember}
-            onClose={() => setSelectedMember(null)}
-          />
-        )}
-      </AnimatePresence>
-    </main>
+        {/* Right Sidebar - Activity Stream */}
+        <div className="w-96 bg-card backdrop-blur-xl border-l border-border-subtle">
+          <ActivityStream activities={data.activity} />
+        </div>
+      </div>
+
+      {/* Person Detail Panel */}
+      <PersonDetail
+        person={selectedPerson}
+        isOpen={isPersonDetailOpen}
+        onClose={handleClosePersonDetail}
+      />
+    </div>
   );
 }

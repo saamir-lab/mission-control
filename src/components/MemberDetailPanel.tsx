@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import type { TeamMember } from "@/types/dashboard";
+import type { TeamMember } from "@/src/types/dashboard";
 
 type MemberDetailPanelProps = {
   member: TeamMember | null;

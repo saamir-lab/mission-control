@@ -9,8 +9,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Mission Control V4",
-  description: "Founder-grade cinematic operations dashboard",
+  title: "Mission Control V5 - Rimo Health",
+  description: "Complete Business Intelligence Dashboard - Real-time org chart, task tracking, and activity monitoring",
+  keywords: "business intelligence, dashboard, linear, slack, team management, org chart",
+  authors: [{ name: "Rimo Health" }],
+  viewport: "width=device-width, initial-scale=1",
 };
 
 export default function RootLayout({
