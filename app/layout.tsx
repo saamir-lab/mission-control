@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -8,11 +8,23 @@ const inter = Inter({
   display: "swap",
 });
 
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains",
+  display: "swap",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Mission Control V5 - Rimo Health",
-  description: "Complete Business Intelligence Dashboard - Real-time org chart, task tracking, and activity monitoring",
-  keywords: "business intelligence, dashboard, linear, slack, team management, org chart",
-  authors: [{ name: "Rimo Health" }],
+  title: "Mission Control // JARVIS HUD",
+  description: "Tony Stark-style mission control dashboard with live brand intelligence.",
+  keywords: "jarvis, dashboard, mission control, business intelligence, hud",
+  authors: [{ name: "Mission Control" }],
   viewport: "width=device-width, initial-scale=1",
 };
 
@@ -23,7 +35,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.variable}>{children}</body>
+      <body
+        className={`${inter.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable}`}
+      >
+        {children}
+      </body>
     </html>
   );
 }
