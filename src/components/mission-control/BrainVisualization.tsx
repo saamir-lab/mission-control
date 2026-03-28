@@ -126,36 +126,21 @@ function BrainScene({ nodes, links }: BrainVisualizationProps) {
       <group ref={groupRef}>
         <points>
           <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              count={ambientParticlePositions.length / 3}
-              itemSize={3}
-              array={ambientParticlePositions}
-            />
+            <bufferAttribute attach="attributes-position" args={[ambientParticlePositions, 3]} />
           </bufferGeometry>
           <pointsMaterial color="#00d4ff" size={0.03} sizeAttenuation transparent opacity={0.9} />
         </points>
 
         <lineSegments>
           <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              count={ambientLinkPositions.length / 3}
-              itemSize={3}
-              array={ambientLinkPositions}
-            />
+            <bufferAttribute attach="attributes-position" args={[ambientLinkPositions, 3]} />
           </bufferGeometry>
           <lineBasicMaterial color="#00d4ff" transparent opacity={0.09} />
         </lineSegments>
 
         <lineSegments>
           <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              count={baseEntityLinkPositions.length / 3}
-              itemSize={3}
-              array={baseEntityLinkPositions}
-            />
+            <bufferAttribute attach="attributes-position" args={[baseEntityLinkPositions, 3]} />
           </bufferGeometry>
           <lineBasicMaterial color="#66e5ff" transparent opacity={0.3} />
         </lineSegments>
@@ -163,12 +148,7 @@ function BrainScene({ nodes, links }: BrainVisualizationProps) {
         {highlightedLinkPositions.length > 0 && (
           <lineSegments>
             <bufferGeometry>
-              <bufferAttribute
-                attach="attributes-position"
-                count={highlightedLinkPositions.length / 3}
-                itemSize={3}
-                array={highlightedLinkPositions}
-              />
+              <bufferAttribute attach="attributes-position" args={[highlightedLinkPositions, 3]} />
             </bufferGeometry>
             <lineBasicMaterial color="#ffffff" transparent opacity={0.75} />
           </lineSegments>

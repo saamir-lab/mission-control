@@ -647,23 +647,52 @@ function normalizeId(value: string): string {
     .replace(/\s+/g, "-");
 }
 
+const KNOWN_BRANDS = new Set([
+  "es",
+  "cured",
+  "trycured",
+  "veyora",
+  "veganic",
+  "femina",
+  "sana direct",
+  "sana-direct",
+  "brandify",
+  "rimo",
+]);
+
+const KNOWN_DEALS = new Set(["rimo lite", "rimo-lite", "deal"]);
+
 function inferNodeType(filePath: string, label: string, content: string): GraphNodeType {
-  const source = `${filePath} ${content}`.toLowerCase();
-  if (source.includes("people") || source.includes("person") || source.includes("human")) {
+  const sourcePath = filePath.toLowerCase();
+  const sourceContent = content.toLowerCase();
+  const labelLower = label.toLowerCase();
+
+  if (sourcePath.includes("/people/") || sourcePath.includes("\\people\\")) {
     return "person";
   }
-  if (source.includes("deal") || source.includes("opportunity")) {
-    return "deal";
-  }
-  if (
-    source.includes("brand") ||
-    ["es", "cured", "veyora", "veganic", "femina", "sana direct", "brandify", "rimo"].includes(
-      label.toLowerCase(),
-    )
-  ) {
+  if (sourcePath.includes("/brands/") || sourcePath.includes("\\brands\\")) {
     return "brand";
   }
-  return "brand";
+  if (sourcePath.includes("/deals/") || sourcePath.includes("\\deals\\")) {
+    return "deal";
+  }
+
+  if (KNOWN_BRANDS.has(labelLower)) {
+    return "brand";
+  }
+  if (KNOWN_DEALS.has(labelLower)) {
+    return "deal";
+  }
+  if (sourceContent.includes("person") || sourceContent.includes("human")) {
+    return "person";
+  }
+  if (sourceContent.includes("deal") || sourceContent.includes("opportunity")) {
+    return "deal";
+  }
+  if (sourceContent.includes("brand")) {
+    return "brand";
+  }
+  return "person";
 }
 
 function colorForNodeType(type: GraphNodeType): string {
@@ -719,7 +748,7 @@ function buildGraphFromFiles(files: GraphFile[]): {
         continue;
       }
       if (!nodeMap.has(targetId)) {
-        const targetType = inferNodeType(file.filePath, wikiLink, wikiLink);
+        const targetType = inferNodeType("", wikiLink, wikiLink);
         nodeMap.set(targetId, {
           id: targetId,
           label: wikiLink,

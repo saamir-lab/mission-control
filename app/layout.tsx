@@ -25,7 +25,11 @@ export const metadata: Metadata = {
   description: "Tony Stark-style mission control dashboard with live brand intelligence.",
   keywords: "jarvis, dashboard, mission control, business intelligence, hud",
   authors: [{ name: "Mission Control" }],
-  viewport: "width=device-width, initial-scale=1",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
