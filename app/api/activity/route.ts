@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { getDashboardPayload } from "@/src/lib/mission-control-data";
+import { getActivityPayload } from "@/src/lib/mission-control-data";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const payload = getDashboardPayload();
+    const payload = getActivityPayload();
     return NextResponse.json(payload, {
       headers: {
         "Cache-Control": "no-store, max-age=0",
@@ -15,7 +15,7 @@ export async function GET() {
     const message = error instanceof Error ? error.message : "Unknown server error";
     return NextResponse.json(
       {
-        error: "Unable to load dashboard payload",
+        error: "Unable to load activity payload",
         details: message,
         timestamp: new Date().toISOString(),
       },
